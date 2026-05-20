@@ -3,6 +3,7 @@ import { existsSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { dirname, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { handleNodeGenerate } from "./api/shared/openai-copy.mjs";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const port = Number(process.env.PORT || 4173);
@@ -36,6 +37,13 @@ function getFilePath(requestUrl, host) {
 
 const server = createServer(async (request, response) => {
   try {
+    const url = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
+
+    if (url.pathname === "/api/generate") {
+      await handleNodeGenerate(request, response);
+      return;
+    }
+
     const filePath = getFilePath(request.url || "/", request.headers.host || "localhost");
 
     if (!filePath) {

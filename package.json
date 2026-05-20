@@ -5,6 +5,6 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check app.js && node --check server.mjs"
+    "check": "node --check app.js && node --check server.mjs && node --check api/generate.js && node --check api/shared/openai-copy.mjs && node --check netlify/functions/generate.mjs"
   }
 }

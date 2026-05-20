@@ -87,6 +87,8 @@ const $ = (selector) => document.querySelector(selector);
 
 const state = {
   latestResults: [],
+  isGenerating: false,
+  modelUnavailable: false,
 };
 
 const draftKey = "viral-copy-generator-draft";
@@ -119,13 +121,21 @@ function unique(items) {
 }
 
 function getInput() {
-  const platform = platformMap[$("#platform").value];
-  const tone = toneMap[$("#tone").value];
-  const goal = goalMap[$("#goal").value];
-  const length = lengthMap[$("#length").value];
+  const platformValue = $("#platform").value;
+  const toneValue = $("#tone").value;
+  const goalValue = $("#goal").value;
+  const lengthValue = $("#length").value;
+  const platform = platformMap[platformValue];
+  const tone = toneMap[toneValue];
+  const goal = goalMap[goalValue];
+  const length = lengthMap[lengthValue];
 
   return {
     rawContent: $("#rawContent").value.trim(),
+    platformValue,
+    toneValue,
+    goalValue,
+    lengthValue,
     platform,
     tone,
     goal,
@@ -288,15 +298,7 @@ function makeTitleBank(input, info) {
   };
 }
 
-function generateResults() {
-  const input = getInput();
-
-  if (!input.rawContent) {
-    showToast("先贴一段内容，再生成文案。");
-    $("#rawContent").focus();
-    return;
-  }
-
+function buildLocalResults(input) {
   const info = analyzeContent(input);
   const baseResults = [
     makeTitleBank(input, info),
@@ -314,14 +316,115 @@ function generateResults() {
     moments: ["私域转化", "标题池", "种草笔记", "商品卖点"],
     ecommerce: ["商品卖点", "标题池", "种草笔记", "短视频口播"],
     bilibili: ["标题池", "长文开头", "短视频口播", "种草笔记"],
-  }[$("#platform").value];
+  }[input.platformValue];
 
-  state.latestResults = preferred
+  const results = preferred
     .map((kicker) => baseResults.find((item) => item.kicker === kicker))
     .filter(Boolean);
 
+  return { info, results };
+}
+
+function buildModelPayload(input) {
+  return {
+    rawContent: input.rawContent,
+    platform: input.platform.label,
+    platformValue: input.platformValue,
+    tone: input.tone.label,
+    goal: input.goal,
+    length: input.lengthValue,
+    audience: input.audience,
+    painPoint: input.painPoint,
+    offer: input.offer,
+    keywords: input.keywords,
+  };
+}
+
+function normalizeModelResults(results) {
+  if (!Array.isArray(results)) return [];
+
+  return results
+    .map((result) => ({
+      kicker: String(result?.kicker || "AI 文案").slice(0, 24),
+      title: String(result?.title || "生成结果").slice(0, 80),
+      score: Math.max(0, Math.min(100, Math.round(Number(result?.score) || 88))),
+      content: String(result?.content || "").trim(),
+    }))
+    .filter((result) => result.content)
+    .slice(0, 6);
+}
+
+async function requestModelResults(input) {
+  if (state.modelUnavailable || window.location.protocol === "file:") {
+    return null;
+  }
+
+  const response = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(buildModelPayload(input)),
+  });
+
+  if ([404, 405, 501].includes(response.status)) {
+    state.modelUnavailable = true;
+    return null;
+  }
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.error || "模型接口请求失败。");
+  }
+
+  const results = normalizeModelResults(data.results);
+  if (!results.length) {
+    throw new Error("模型没有返回可用文案。");
+  }
+
+  return { ...data, results };
+}
+
+function setGenerating(isGenerating) {
+  state.isGenerating = isGenerating;
+  const generateButton = $("#generateButton");
+  generateButton.disabled = isGenerating;
+  generateButton.textContent = isGenerating ? "AI 生成中..." : "生成文案";
+}
+
+async function generateResults() {
+  if (state.isGenerating) return;
+
+  const input = getInput();
+
+  if (!input.rawContent) {
+    showToast("先贴一段内容，再生成文案。");
+    $("#rawContent").focus();
+    return;
+  }
+
+  setGenerating(true);
+
+  try {
+    const modelData = await requestModelResults(input);
+
+    if (modelData) {
+      state.latestResults = modelData.results;
+      renderResults(state.latestResults);
+      renderModelInsights(input, modelData);
+      showToast("AI 文案已生成");
+      return;
+    }
+  } catch (error) {
+    console.warn(error);
+    showToast("模型暂时不可用，已用本地引擎生成。");
+  } finally {
+    setGenerating(false);
+  }
+
+  const { info, results } = buildLocalResults(input);
+  state.latestResults = results;
   renderResults(state.latestResults);
-  renderInsights(input, info, state.latestResults);
+  renderInsights(input, info, state.latestResults, "本地引擎");
 }
 
 function renderResults(results) {
@@ -342,14 +445,33 @@ function renderResults(results) {
   });
 }
 
-function renderInsights(input, info, results) {
+function renderInsights(input, info, results, source = "本地引擎") {
   $("#insightStrip").innerHTML = [
+    `来源：${source}`,
     `平台：${input.platform.label}`,
     `标题 ${makeTitles(input, info).length} 条`,
     `标签 ${input.platform.tags.length + Math.min(info.keywords.length, 3)} 个`,
     `目标：${input.goal}`,
     `关键词：${info.keywords.slice(0, 3).join(" / ")}`,
   ]
+    .map((item) => `<span>${escapeHtml(item)}</span>`)
+    .join("");
+}
+
+function renderModelInsights(input, modelData) {
+  const keywords = Array.isArray(modelData.insights?.keywords) ? modelData.insights.keywords : [];
+  const titleCount = Math.round(Number(modelData.insights?.titleCount) || 0);
+  const tagCount = Math.round(Number(modelData.insights?.tagCount) || keywords.length);
+
+  $("#insightStrip").innerHTML = [
+    `来源：${modelData.model || "AI 模型"}`,
+    `平台：${input.platform.label}`,
+    `标题 ${titleCount || "多"} 条`,
+    `标签 ${tagCount} 个`,
+    `目标：${input.goal}`,
+    keywords.length ? `关键词：${keywords.slice(0, 3).join(" / ")}` : "",
+  ]
+    .filter(Boolean)
     .map((item) => `<span>${escapeHtml(item)}</span>`)
     .join("");
 }
