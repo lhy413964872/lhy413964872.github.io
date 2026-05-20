@@ -6,6 +6,41 @@ import { fileURLToPath } from "node:url";
 import { handleNodeGenerate } from "./api/shared/openai-copy.mjs";
 
 const root = dirname(fileURLToPath(import.meta.url));
+
+async function loadLocalEnv() {
+  const envPath = resolve(root, ".env");
+
+  if (!existsSync(envPath)) {
+    return;
+  }
+
+  const lines = (await readFile(envPath, "utf8")).split(/\r?\n/);
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+
+    if (!trimmed || trimmed.startsWith("#")) {
+      return;
+    }
+
+    const separatorIndex = trimmed.indexOf("=");
+
+    if (separatorIndex === -1) {
+      return;
+    }
+
+    const key = trimmed.slice(0, separatorIndex).trim();
+    const rawValue = trimmed.slice(separatorIndex + 1).trim();
+    const value = rawValue.replace(/^["']|["']$/g, "");
+
+    if (key && !process.env[key]) {
+      process.env[key] = value;
+    }
+  });
+}
+
+await loadLocalEnv();
+
 const port = Number(process.env.PORT || 4173);
 
 const mimeTypes = {

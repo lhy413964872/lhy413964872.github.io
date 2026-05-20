@@ -22,11 +22,12 @@ http://localhost:4173
 
 ### 本地接入模型
 
-先在当前目录设置环境变量：
+先在当前目录创建 `.env` 文件：
 
-```bash
+```env
 OPENAI_API_KEY=你的_API_Key
 OPENAI_MODEL=gpt5.5
+OPENAI_REASONING_EFFORT=low
 ```
 
 然后运行：
@@ -36,6 +37,8 @@ node server.mjs
 ```
 
 打开 `http://localhost:4173` 后，点击生成会走 `/api/generate` 调用 OpenAI Responses API。`OPENAI_MODEL` 可选，不填时默认使用 `gpt5.5`，后端会自动转换为接口需要的模型名。
+
+`.env` 已加入 `.gitignore`，不要把真实 API Key 提交到 GitHub。
 
 ## 分享上线
 
