@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>爆款文案生成器</title>
+    <meta
+      name="description"
+      content="输入产品、活动或服务内容，自动生成小红书、抖音、朋友圈、公众号和电商详情页文案。"
+    />
+    <meta name="theme-color" content="#0f766e" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="爆款文案生成器" />
+    <meta
+      property="og:description"
+      content="把内容贴进去，一键生成多平台爆款文案、标题、CTA 和标签。"
+    />
+    <meta property="og:image" content="preview.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="input-panel" aria-labelledby="app-title">
+        <div class="brand-row">
+          <div>
+            <p class="eyebrow">COPY ENGINE</p>
+            <h1 id="app-title">爆款文案生成器</h1>
+            <p class="subtitle">输入原始内容，快速生成多平台可发布文案。</p>
+          </div>
+          <div class="brand-actions">
+            <button class="ghost-button" id="shareButton" type="button">分享</button>
+            <button class="ghost-button" id="clearButton" type="button">清空</button>
+          </div>
+        </div>
+
+        <label class="field-label" for="rawContent">内容</label>
+        <textarea
+          id="rawContent"
+          placeholder="粘贴产品介绍、活动信息、课程大纲、服务亮点、门店信息或你想推广的任何内容..."
+        ></textarea>
+
+        <div class="field-grid">
+          <label>
+            <span class="field-label">平台</span>
+            <select id="platform">
+              <option value="xiaohongshu">小红书</option>
+              <option value="douyin">抖音</option>
+              <option value="wechat">公众号</option>
+              <option value="moments">朋友圈</option>
+              <option value="ecommerce">电商详情页</option>
+              <option value="bilibili">B站</option>
+            </select>
+          </label>
+
+          <label>
+            <span class="field-label">语气</span>
+            <select id="tone">
+              <option value="natural">真实种草</option>
+              <option value="sharp">强钩子</option>
+              <option value="premium">高级感</option>
+              <option value="friendly">朋友推荐</option>
+              <option value="professional">专业可信</option>
+            </select>
+          </label>
+
+          <label>
+            <span class="field-label">目标</span>
+            <select id="goal">
+              <option value="conversion">促转化</option>
+              <option value="traffic">引流</option>
+              <option value="trust">建立信任</option>
+              <option value="launch">新品发布</option>
+              <option value="retention">复购召回</option>
+            </select>
+          </label>
+
+          <label>
+            <span class="field-label">长度</span>
+            <select id="length">
+              <option value="short">短文案</option>
+              <option value="medium" selected>中等</option>
+              <option value="long">详细</option>
+            </select>
+          </label>
+        </div>
+
+        <details class="advanced-box">
+          <summary>高级信息</summary>
+          <div class="field-grid">
+            <label>
+              <span class="field-label">目标人群</span>
+              <input id="audience" placeholder="例如：宝妈、职场新人、健身人群" />
+            </label>
+            <label>
+              <span class="field-label">痛点</span>
+              <input id="painPoint" placeholder="例如：没时间、不知道怎么选、怕踩雷" />
+            </label>
+            <label>
+              <span class="field-label">优惠/行动</span>
+              <input id="offer" placeholder="例如：限时 7 折、私信领取、预约体验" />
+            </label>
+            <label>
+              <span class="field-label">关键词</span>
+              <input id="keywords" placeholder="用逗号分隔，例如：效率,省心,高颜值" />
+            </label>
+          </div>
+        </details>
+
+        <div class="action-row">
+          <button class="primary-button" id="generateButton" type="button">生成文案</button>
+          <button class="secondary-button" id="sampleButton" type="button">填入示例</button>
+        </div>
+      </section>
+
+      <section class="output-panel" aria-live="polite">
+        <div class="toolbar">
+          <div>
+            <p class="eyebrow">OUTPUT</p>
+            <h2>生成结果</h2>
+          </div>
+          <div class="toolbar-actions">
+            <button class="ghost-button" id="copyAllButton" type="button">复制全部</button>
+            <button class="ghost-button" id="downloadButton" type="button">导出 TXT</button>
+          </div>
+        </div>
+
+        <div class="insight-strip" id="insightStrip">
+          <span>等待输入内容</span>
+          <span>标题 0 条</span>
+          <span>标签 0 个</span>
+        </div>
+
+        <div class="result-grid" id="resultGrid">
+          <article class="empty-state">
+            <h3>把内容贴进左侧，点一下生成</h3>
+            <p>系统会自动拆卖点、找痛点、组合标题、正文、CTA 和平台标签。</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <template id="resultCardTemplate">
+      <article class="result-card">
+        <div class="card-header">
+          <div>
+            <p class="card-kicker"></p>
+            <h3></h3>
+          </div>
+          <span class="score-badge"></span>
+        </div>
+        <pre></pre>
+        <button type="button" class="copy-button">复制</button>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>

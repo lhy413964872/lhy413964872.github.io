@@ -1,0 +1,16 @@
+{
+  "name": "爆款文案生成器",
+  "short_name": "文案生成器",
+  "description": "输入内容，一键生成多平台爆款文案。",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f5f7f7",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
