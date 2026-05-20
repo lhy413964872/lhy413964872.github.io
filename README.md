@@ -26,7 +26,7 @@ http://localhost:4173
 
 ```bash
 OPENAI_API_KEY=你的_API_Key
-OPENAI_MODEL=gpt-5.5
+OPENAI_MODEL=gpt5.5
 ```
 
 然后运行：
@@ -35,7 +35,7 @@ OPENAI_MODEL=gpt-5.5
 node server.mjs
 ```
 
-打开 `http://localhost:4173` 后，点击生成会走 `/api/generate` 调用 OpenAI Responses API。`OPENAI_MODEL` 可选，不填时默认使用 `gpt-5.5`。
+打开 `http://localhost:4173` 后，点击生成会走 `/api/generate` 调用 OpenAI Responses API。`OPENAI_MODEL` 可选，不填时默认使用 `gpt5.5`，后端会自动转换为接口需要的模型名。
 
 ## 分享上线
 
@@ -48,7 +48,7 @@ node server.mjs
 3. Framework Preset 选择 `Other`
 4. Build Command 留空，Output Directory 留空或填 `.`
 5. 在 Project Settings -> Environment Variables 添加 `OPENAI_API_KEY`
-6. 可选添加 `OPENAI_MODEL=gpt-5.5`
+6. 可选添加 `OPENAI_MODEL=gpt5.5`
 7. 部署完成后复制 Vercel 给出的公开网址
 
 ### Netlify
@@ -58,7 +58,7 @@ node server.mjs
 3. 上传这个文件夹，或连接 GitHub 仓库
 4. Publish directory 填 `.`
 5. 在 Site configuration -> Environment variables 添加 `OPENAI_API_KEY`
-6. 可选添加 `OPENAI_MODEL=gpt-5.5`
+6. 可选添加 `OPENAI_MODEL=gpt5.5`
 7. 部署完成后分享公开网址
 
 ### GitHub Pages

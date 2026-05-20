@@ -1,5 +1,8 @@
-const DEFAULT_MODEL = "gpt-5.5";
+const DEFAULT_MODEL = "gpt5.5";
 const MAX_BODY_BYTES = 64 * 1024;
+const modelAliases = {
+  "gpt5.5": "gpt-5.5",
+};
 
 const resultSchema = {
   type: "object",
@@ -157,8 +160,13 @@ function normalizeModelOutput(parsed, model) {
   };
 }
 
+function resolveModel(model) {
+  const requestedModel = cleanString(model, 80) || DEFAULT_MODEL;
+  return modelAliases[requestedModel] || requestedModel;
+}
+
 function getRequestBody(input, env) {
-  const model = env.OPENAI_MODEL || DEFAULT_MODEL;
+  const model = resolveModel(env.OPENAI_MODEL);
   const body = {
     model,
     instructions: systemPrompt,
@@ -190,7 +198,7 @@ export async function createCopyResponse(payload, env = process.env) {
   }
 
   const input = sanitizeInput(payload);
-  const model = env.OPENAI_MODEL || DEFAULT_MODEL;
+  const model = resolveModel(env.OPENAI_MODEL);
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
